@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import type { ThesisSubmission } from "@/types/thesis";
 
 type UserType = "lpu" | "non-lpu";
 
@@ -21,22 +23,41 @@ interface FormData {
 
 const Index = () => {
   const [userType, setUserType] = useState<UserType>("lpu");
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
 
   const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
     try {
-      // TODO: Implement Supabase submission
-      console.log("Form submitted:", data);
+      const submission: Omit<ThesisSubmission, "id" | "created_at"> = {
+        user_type: data.userType,
+        name: data.name,
+        student_number: data.studentNumber,
+        program_department: data.programDepartment,
+        school_name: data.schoolName,
+        thesis_title: data.thesisTitle,
+      };
+
+      const { error } = await supabase
+        .from("thesis_submissions")
+        .insert([submission]);
+
+      if (error) throw error;
+
       toast({
         title: "Success!",
         description: "Your thesis record has been submitted.",
       });
+      reset(); // Reset form after successful submission
     } catch (error) {
+      console.error("Submission error:", error);
       toast({
         title: "Error",
         description: "Failed to submit thesis record. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,8 +171,8 @@ const Index = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">
-                Submit
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
             </form>
           </CardContent>
