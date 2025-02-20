@@ -22,9 +22,14 @@ interface FormData {
 }
 
 const Index = () => {
-  const [userType, setUserType] = useState<UserType>("lpu");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
+    defaultValues: {
+      userType: "lpu"
+    }
+  });
+  
+  const userType = watch("userType");
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -76,7 +81,8 @@ const Index = () => {
                 <Label>User Type</Label>
                 <RadioGroup
                   defaultValue="lpu"
-                  onValueChange={(value: UserType) => setUserType(value)}
+                  value={userType}
+                  onValueChange={(value: UserType) => setValue("userType", value)}
                   className="flex flex-col space-y-2"
                 >
                   <div className="flex items-center space-x-2">
